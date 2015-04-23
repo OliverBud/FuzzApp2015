@@ -1,10 +1,16 @@
 package com.fuzzproductions.fuzzapp;
 
 import android.app.ActivityOptions;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -14,10 +20,20 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.transition.Explode;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Headers;
@@ -62,15 +78,20 @@ public class MainActivity extends ActionBarActivity {
 
     List<myListFragment> fragments;
 
+    FrameLayout displayLayout;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         listPager = (ViewPager) findViewById(R.id.pager);
+        displayLayout = (FrameLayout) findViewById(R.id.displayLayout);
 
         fullList = new ArrayList<String>();
         textList = new ArrayList<String>();
@@ -79,13 +100,105 @@ public class MainActivity extends ActionBarActivity {
         try {
             downloadJson();
         }
-        catch(IOException e){
-            Log.d("..........", "IOException : " + e.getMessage());
+        catch(Exception e){
+            Log.d("..........", "Exception : " + e.getMessage());
+            displayNoConnection();
         }
 
     }
 
+    ProgressBar spinner;
+    TextView noConnectionImage;
+    Button retry;
+    View noConnectionLayout;
+
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+    public void displayNoConnection(){
+        Log.d("..........", "displayNoConnection");
+
+        listPager.setVisibility(View.GONE);
+
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService
+                        (Context.LAYOUT_INFLATER_SERVICE);
+
+                noConnectionLayout = inflater.inflate(R.layout.noconnection_layout,null);
+                spinner = (ProgressBar) noConnectionLayout.findViewById(R.id.spinner);
+
+                spinner.setIndeterminate(true);
+
+                noConnectionImage = (TextView) noConnectionLayout.findViewById(R.id.noConnectionImage);
+
+                Drawable drawable = getResources().getDrawable(android.R.drawable.btn_star);
+                Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                drawable.draw(canvas);
+
+                noConnectionImage.setText(":/");
+                noConnectionImage.setTextSize(150);
+                noConnectionImage.setTextColor(Color.BLACK);
+                retry = (Button) noConnectionLayout.findViewById(R.id.retryButton);
+                retry.setText("No InternetConnection; Retry");
+
+                spinner.setVisibility(View.GONE);
+
+                retry.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            retry.setVisibility(View.GONE);
+                            noConnectionImage.setVisibility(View.GONE);
+                            spinner.setVisibility(View.VISIBLE);
+                            downloadJson();
+                        }
+                        catch(IOException e){
+                            retry.setVisibility(View.VISIBLE);
+                            noConnectionImage.setVisibility(View.VISIBLE);
+                            spinner.setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+
+                FrameLayout.LayoutParams rlp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER);
+                displayLayout.addView(noConnectionLayout, rlp);
+                Log.d("..........", "noConnection layout added");
+
+            }
+        });
+
+
+
+    }
+
+    public void cleanupNoConnection(){
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (noConnectionLayout != null){
+                    displayLayout.removeView(noConnectionLayout);
+                    noConnectionLayout = null;
+                }
+
+            }
+        });
+
+    }
+
     public void initializePaging(String httpResponse){
+
+        cleanupNoConnection();
         JsonString = httpResponse;
         try {
             jsonList = new JSONArray(JsonString);
@@ -103,18 +216,11 @@ public class MainActivity extends ActionBarActivity {
 
                         if (TYPE_TEXT.equals(jObject.get(TYPE))) {
                             try {
+                                if (((String) jObject.get("data")).isEmpty()){
+                                    continue;
+                                }
                                 URL url = new URL((String) jObject.get("data"));
-//                                Bitmap imageBitmap = getImage(url);
-//                                if (imageBitmap == null){
-//                                    continue;
-//                                }
-//                                if (imageBitmap.getWidth() > 400){
-//                                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, 400, 400, false);
-//                                }
-//
-//                                if (imageBitmap.getWidth() < 170){
-//                                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, 170, 170, false);
-//                                }
+
                                 imageList.add((String) jObject.get("data"));
                                 fullList.add((String) jObject.get("data"));
                             } catch (MalformedURLException e) {
@@ -126,17 +232,7 @@ public class MainActivity extends ActionBarActivity {
                         } else if (TYPE_IMAGE.equals(jObject.get(TYPE))) {
                             try {
                                 URL url = new URL((String) jObject.get("data"));
-//                                Bitmap imageBitmap = getImage(url);
-//                                if (imageBitmap == null){
-//                                    continue;
-//                                }
-//                                if (imageBitmap.getWidth() > 400){
-//                                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, 400, 400, false);
-//                                }
-//
-//                                if (imageBitmap.getWidth() < 170){
-//                                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, 170, 170, false);
-//                                }
+
                                 imageList.add((String) jObject.get("data"));
                                 fullList.add((String) jObject.get("data"));
                             } catch (MalformedURLException e) {
@@ -193,7 +289,16 @@ public class MainActivity extends ActionBarActivity {
             return false;
         }
 
+        if (image.getVisibility() == View.GONE){
+            return false;
+        }
+
+
+
         if(android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
+            if (image.getTransitionName() == null){
+                return false;
+            }
             transitionName = "sharedElement_" + position;
             getWindow().setSharedElementExitTransition(new Explode());
 
@@ -231,6 +336,8 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onFailure(Request request, IOException e) {
                 e.printStackTrace();
+                cleanupNoConnection();
+                displayNoConnection();
             }
 
             @Override
@@ -238,6 +345,12 @@ public class MainActivity extends ActionBarActivity {
                 if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
                 String responseString = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        listPager.setVisibility(View.VISIBLE);
+                    }
+                });
                 initializePaging(responseString);
             }
     });
@@ -250,6 +363,8 @@ public class MainActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+
         return true;
     }
 
@@ -262,8 +377,11 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent aboutIntent = new Intent(this, aboutActivity.class);
+            startActivityForResult(aboutIntent, 0);
             return true;
         }
+
 
         return super.onOptionsItemSelected(item);
     }

@@ -1,5 +1,6 @@
 package com.fuzzproductions.fuzzapp;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -19,6 +20,8 @@ public class imageActivity extends ActionBarActivity {
 
     ImageView imageView;
     Bitmap image;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,6 +51,7 @@ public class imageActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_image, menu);
+
         return true;
     }
 
@@ -60,12 +64,15 @@ public class imageActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent aboutIntent = new Intent(this, aboutActivity.class);
+            startActivityForResult(aboutIntent, 0);
             return true;
         }
         if (id == android.R.id.home) {
             onBackPressed();
             return true;
         }
+
 
 
         return super.onOptionsItemSelected(item);

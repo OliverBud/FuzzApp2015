@@ -1,6 +1,8 @@
 package com.fuzzproductions.fuzzapp;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v4.app.NavUtils;
@@ -18,6 +20,7 @@ import android.webkit.WebViewClient;
 public class webViewActivity extends ActionBarActivity {
 
     WebView webview;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,7 @@ public class webViewActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_webview, menu);
+
         return true;
     }
 
@@ -55,13 +59,22 @@ public class webViewActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent aboutIntent = new Intent(this, aboutActivity.class);
+            startActivityForResult(aboutIntent, 0);
+            return true;
+        }
+        if (id == R.id.action_browser) {
+            String url = "https://fuzzproductions.com/";
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivityForResult(i, 0);
             return true;
         }
         if (id == android.R.id.home) {
             onBackPressed();
             return true;
         }
-
+     
 
         return super.onOptionsItemSelected(item);
     }

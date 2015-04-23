@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,33 +80,21 @@ public class myArrayAdapter extends ArrayAdapter {
                      if (holder.image.getTransitionName() == null) {
                          holder.image.setTransitionName(name);
                      }
-                     Log.d("..........", "transitionName: " + name);
+
+                     Log.d("..........", "transitionName: " + holder.image.getTransitionName());
 
                  }
 
                  imageManager.displayImage(values[position], (Activity) this.context, holder.image);
-//                 holder.image.setOnClickListener(new View.OnClickListener() {
-//                     @Override
-//                     public void onClick(View v) {
-//                         ((MainActivity)context).clickedImage(holder.image, position);
-//                     }
-//                 });
-
              }
              catch(MalformedURLException e) {
-                 if (holder.image.getDrawable() != null ){
-                     holder.image.setVisibility(View.GONE);
-                 }
+                 holder.image.setVisibility(View.GONE);
+
                  if (holder.text.getVisibility() != View.VISIBLE ){
                      holder.text.setVisibility(View.VISIBLE);
                  }
-                 holder.text.setText(values[position]);
-//                 rowView.setOnClickListener(new View.OnClickListener() {
-//                     @Override
-//                     public void onClick(View v) {
-//                         ((MainActivity)context).clickedText();
-//                     }
-//                 });
+                 holder.text.setText(Html.fromHtml(values[position]));
+
              }
         rowFrame.setTag(holder);
 
