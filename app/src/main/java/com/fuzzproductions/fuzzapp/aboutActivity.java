@@ -1,12 +1,22 @@
 package com.fuzzproductions.fuzzapp;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
@@ -23,17 +33,44 @@ public class aboutActivity extends ActionBarActivity{
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         about = (TextView)findViewById(R.id.about);
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        alp.setMargins(20, 20, 20, 20);
+        about.setLayoutParams(alp);
 
-        about.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer hendrerit suscipit dolor nec hendrerit. Vivamus rutrum, turpis nec tincidunt ultricies, turpis orci facilisis nisl, a iaculis nisi enim eget nunc. Cras aliquet non turpis eu laoreet. Phasellus non suscipit leo. Etiam porta augue nec lectus porttitor euismod. Nunc et metus ante. Suspendisse consectetur sed nibh eget tempor. Nullam vestibulum lectus et efficitur rutrum. Nulla sapien ante, rutrum quis risus in, gravida finibus tortor. Aliquam fermentum ullamcorper justo iaculis pulvinar. Maecenas laoreet justo eu sagittis sodales. Sed id consequat nulla. Cras porttitor enim leo, faucibus porttitor ex dapibus id. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed efficitur lorem a neque auctor, eget malesuada lectus ultricies. Vivamus hendrerit dapibus purus, posuere blandit est ultrices eget.\n" +
-                "\n" +
-                "Morbi sit amet augue sollicitudin, laoreet justo sit amet, malesuada nisi. Nunc elementum tortor ut varius consequat. Ut sed ante felis. Sed mattis metus eget ante venenatis vehicula. Praesent metus dolor, volutpat et arcu quis, vulputate rutrum eros. Nam eget egestas augue. Fusce blandit mi non orci euismod, sit amet auctor purus dictum. Duis et augue felis. Aliquam in scelerisque odio. Nam elit enim, lobortis vel vestibulum eget, venenatis hendrerit justo. Donec molestie nibh turpis, vitae fringilla leo fermentum a. Aliquam faucibus mattis augue, eu hendrerit metus. Aliquam pharetra urna vitae consectetur sagittis. Maecenas vitae viverra est. Cras sit amet mauris elementum, imperdiet diam ut, vulputate dui. Vivamus vestibulum ultricies ex vitae sodales.\n" +
-                "\n" +
-                "Quisque porta, odio quis iaculis molestie, odio ipsum vulputate nulla, sit amet convallis orci purus non nisi. Mauris id viverra purus. Fusce interdum sem nec metus tincidunt tincidunt. Duis pretium, mi in rhoncus finibus, justo neque hendrerit ipsum, quis rutrum eros libero eu sapien. Nulla fringilla blandit orci ut vehicula. Integer ultricies, enim vel iaculis feugiat, tortor arcu gravida quam, id viverra diam ante malesuada diam. Sed auctor sollicitudin sem. Morbi tincidunt a sapien et mattis.\n" +
-                "\n" +
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras facilisis, urna ut iaculis porta, justo ante varius tortor, at euismod arcu ipsum sit amet turpis. Etiam vel pretium nisi. Praesent a accumsan est. Praesent eu nibh varius, tincidunt dolor nec, consectetur tortor. Suspendisse rutrum hendrerit turpis, id aliquet diam rhoncus et. Cras id mauris pulvinar, varius sem vitae, congue enim. Aenean euismod ex sed justo suscipit lacinia eu et enim. Sed pharetra vehicula neque id faucibus. Etiam id gravida lorem. Mauris vitae est non felis ullamcorper fringilla non a ex.\n" +
-                "\n" +
-                "Donec efficitur vestibulum varius. Donec sed tristique est, sodales feugiat odio. Phasellus ornare congue sapien, sed rutrum nisl consequat at. Integer sodales molestie est non fringilla. Donec id odio justo. In lobortis arcu quis justo commodo dictum. Duis non tortor at odio luctus efficitur at at nulla. Donec sed est varius, gravida massa non, lobortis risus. Aliquam malesuada iaculis molestie. Aenean elit lorem, ");
 
+        about.setLinksClickable(true);
+        about.setMovementMethod(LinkMovementMethod.getInstance());
+        about.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLink();
+            }
+        });
+
+        about.setText(Html.fromHtml("<p>HELLO! thanks for checking out this app.</p> \n<p>I wrote it, my name is Oliver Budiardjo.</p> \n \n<p>I used some internet resources to help me along. " +
+                "I used <a href=\\\"http://codehenge.net/blog/2011/06/android-development-tutorial-asynchronous-lazy-loading-and-caching-of-listview-images/\\\">this really helpful post</a> as a guide to implementing lazy loading</p>" +
+                "\n<p>And I used the Google documentation to implement the image animation from list to activity.</p>" +
+                "\n \n</p>One thing that I had trouble with was dealing with image sizes/memory and scaling. Some of the images sizes were really big" +
+                "and others were really small. I tried to scale as best as I could to make things look alright, but had to" +
+                "also contend with memory issues. Also if I had more time I would get more in depth with the lazy loading queue " +
+                "and a try to speed up the load/display time</p>" +
+                "<p>Also I did not spend much time styling things. That can be a rabbit hole which I did not want to go down </p>"));
+
+        fixTextView(about);
+    }
+    private void fixTextView(TextView tv) {
+        SpannableString current=(SpannableString)tv.getText();
+        URLSpan[] spans=
+                current.getSpans(0, current.length(), URLSpan.class);
+
+        for (URLSpan span : spans) {
+            int start=current.getSpanStart(span);
+            int end=current.getSpanEnd(span);
+
+            current.removeSpan(span);
+            current.setSpan(new DefensiveURLSpan(span.getURL()), start, end,
+                    0);
+        }
     }
 
     @Override
@@ -58,5 +95,28 @@ public class aboutActivity extends ActionBarActivity{
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showLink(){
+        String url = "http://codehenge.net/blog/2011/06/android-development-tutorial-asynchronous-lazy-loading-and-caching-of-listview-images/";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivityForResult(i, 0);
+    }
+
+    private static class DefensiveURLSpan extends URLSpan {
+        public DefensiveURLSpan(String url) {
+            super(url);
+        }
+
+        @Override
+        public void onClick(View widget) {
+            try {
+                android.util.Log.d(getClass().getSimpleName(), "Got here!");
+                super.onClick(widget);
+            }
+            catch (ActivityNotFoundException e) {
+            }
+        }
     }
 }
